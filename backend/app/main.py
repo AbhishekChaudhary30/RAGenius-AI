@@ -9,6 +9,10 @@ from app.database.database import create_db
 
 from app.api.auth import router as auth_router
 
+from fastapi import Depends
+
+from app.core.security import get_current_user
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,3 +72,12 @@ app.include_router(
     auth_router,
     prefix = settings.API_PREFIX
 )
+
+@app.get("/me")
+def current_user(
+    email: str = Depends(get_current_user)
+):
+    return {
+        "email": email,
+        "authenticated": True
+    }
