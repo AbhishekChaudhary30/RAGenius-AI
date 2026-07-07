@@ -1,5 +1,7 @@
 import app.models
 
+import app.models.document
+
 from pathlib import Path
 
 from sqlmodel import SQLModel, create_engine

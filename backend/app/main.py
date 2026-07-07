@@ -1,4 +1,4 @@
-from app.api.document import router as document_router
+from app.api.documents import router as document_router
 
 from contextlib import asynccontextmanager
 

@@ -6,6 +6,10 @@ from fastapi.responses import JSONResponse
 from app.core.security import get_current_active_user
 from app.models.user import User
 
+from sqlmodel import Session
+from app.database.session import get_session
+from app.services.document_service import create_document
+
 router = APIRouter(
     prefix="/documents",
     tags=["Documents"]
@@ -30,7 +34,8 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 @router.post("/upload")
 async def upload_document(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user),
+    session: Session = Depends(get_session)
 ):
 
     extension = Path(file.filename).suffix.lower()
@@ -56,11 +61,20 @@ async def upload_document(
     with open(save_path, "wb") as f:
         f.write(contents)
 
-    return JSONResponse(
-        {
-            "filename": file.filename,
-            "uploaded_by": current_user.email,
-            "size": len(contents),
-            "message": "Upload successful"
-        }
+    document = create_document(
+        session=session,
+        filename=file.filename,
+        original_filename=file.filename,
+        uploaded_by=current_user.email,
+        file_path=str(save_path),
+        file_type=extension,
+        size=len(contents)
     )
+
+    return {
+        "id": document.id,
+        "filename": document.filename,
+        "uploaded_by": document.uploaded_by,
+        "status": document.status,
+        "message": "Document uploaded successfully."
+    }
