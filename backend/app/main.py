@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.database.database import create_db
 
+from app.api.auth import router as auth_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -61,3 +63,8 @@ def home():
         "status": "Running"
 
     }
+    
+app.include_router(
+    auth_router,
+    prefix = settings.API_PREFIX
+)

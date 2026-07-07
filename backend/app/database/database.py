@@ -1,3 +1,5 @@
+import app.models
+
 from pathlib import Path
 
 from sqlmodel import SQLModel, create_engine
