@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from app.database.session import get_session
-from app.schemas.user import UserCreate, UserResponse
+from app.schemas.user import UserRegister, UserResponse
 from app.services.auth_service import create_user
 
 router = APIRouter(
@@ -16,7 +16,7 @@ router = APIRouter(
     response_model=UserResponse
 )
 def register(
-    user: UserCreate,
+    user: UserRegister,
     session: Session = Depends(get_session)
 ):
 

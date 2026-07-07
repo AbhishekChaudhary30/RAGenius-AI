@@ -1,13 +1,13 @@
 from sqlmodel import Session, select
 
 from app.models.user import User
-from app.schemas.user import UserCreate
+from app.schemas.user import UserRegister
 from app.core.security import hash_password
 
 
 def create_user(
     session: Session,
-    user: UserCreate
+    user: UserRegister
 ):
 
     existing_user = session.exec(
@@ -22,7 +22,7 @@ def create_user(
 
     db_user = User(
 
-        name=user.name,
+        full_name=user.full_name,
 
         email=user.email,
 

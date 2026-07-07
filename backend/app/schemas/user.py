@@ -1,9 +1,10 @@
+from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
 
-class UserCreate(BaseModel):
+class UserRegister(BaseModel):
 
-    name: str
+    full_name: str
 
     email: EmailStr
 
@@ -21,8 +22,19 @@ class UserResponse(BaseModel):
 
     id: int
 
-    name: str
+    full_name: str
 
     email: EmailStr
 
     is_active: bool
+
+    is_admin: bool
+
+    created_at: datetime
+
+
+class Token(BaseModel):
+
+    access_token: str
+
+    token_type: str = "bearer"
