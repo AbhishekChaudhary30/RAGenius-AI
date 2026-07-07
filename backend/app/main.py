@@ -13,6 +13,11 @@ from fastapi import Depends
 
 from app.core.security import get_current_user
 
+from app.core.security import (
+    get_current_active_user,
+    get_admin_user
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -75,9 +80,36 @@ app.include_router(
 
 @app.get("/me")
 def current_user(
-    email: str = Depends(get_current_user)
+
+    current_user=Depends(
+        get_current_active_user
+    )
+
 ):
+
     return {
-        "email": email,
-        "authenticated": True
+
+        "id": current_user.id,
+        "full_name": current_user.full_name,
+        "email": current_user.email,
+        "is_admin": current_user.is_admin,
+        "is_active": current_user.is_active
+
+    }
+    
+@app.get("/admin")
+def admin_dashboard(
+
+    current_user=Depends(
+        get_admin_user
+    )
+
+):
+
+    return {
+
+        "message": "Welcome Admin",
+
+        "user": current_user.full_name
+
     }
