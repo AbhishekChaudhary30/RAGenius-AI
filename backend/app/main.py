@@ -1,3 +1,5 @@
+from app.api.document import router as document_router
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -75,6 +77,11 @@ def home():
     
 app.include_router(
     auth_router,
+    prefix = settings.API_PREFIX
+)
+
+app.include_router(
+    document_router,
     prefix = settings.API_PREFIX
 )
 

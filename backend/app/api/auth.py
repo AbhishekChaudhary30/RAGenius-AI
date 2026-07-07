@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
+from fastapi.security import OAuth2PasswordRequestForm
+
 from app.database.session import get_session
 from app.schemas.user import UserRegister, UserResponse
 from app.services.auth_service import create_user
@@ -39,14 +41,14 @@ def register(
 
 @router.post("/login", response_model=Token)
 def login(
-    user: UserLogin,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     session: Session = Depends(get_session)
 ):
 
     db_user = authenticate_user(
         session,
-        user.email,
-        user.password
+        form_data.username,
+        form_data.password
     )
 
     if not db_user:
