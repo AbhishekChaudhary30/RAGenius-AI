@@ -4,6 +4,10 @@ from app.models.user import User
 from app.schemas.user import UserRegister
 from app.core.security import hash_password
 
+from sqlmodel import select
+from app.core.security import verify_password
+from app.models.user import User
+
 
 def create_user(
     session: Session,
@@ -39,3 +43,17 @@ def create_user(
     session.refresh(db_user)
 
     return db_user
+
+def authenticate_user(session, email: str, password: str):
+
+    user = session.exec(
+        select(User).where(User.email == email)
+    ).first()
+
+    if not user:
+        return None
+
+    if not verify_password(password, user.hashed_password):
+        return None
+
+    return user
