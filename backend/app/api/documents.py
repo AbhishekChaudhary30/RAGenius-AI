@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from app.services.processing_service import ProcessingService
+
 from pydantic import BaseModel
 
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
@@ -86,13 +88,30 @@ async def upload_document(
         file_type=extension,
         size=len(contents)
     )
+    
+    processing_result = ProcessingService.process_document(
+    str(save_path)
+    )
 
     return {
-        "id": document.id,
-        "filename": document.filename,
-        "uploaded_by": document.uploaded_by,
-        "status": document.status,
-        "message": "Document uploaded successfully."
+
+    "id": document.id,
+
+    "filename": document.filename,
+
+    "uploaded_by": document.uploaded_by,
+
+    "status": document.status,
+
+    "processing": {
+
+        "characters": processing_result["characters"],
+
+        "words": processing_result["words"]
+
+    },
+
+    "message": "Document uploaded and processed successfully."
     }
     
 @router.get("/")
@@ -341,5 +360,50 @@ def delete_document_api(
     return {
 
         "message": "Document deleted successfully."
+
+    }
+    
+@router.post("/{document_id}/process")
+def process_document(
+
+    document_id: int,
+
+    current_user: User = Depends(get_current_active_user),
+
+    session: Session = Depends(get_session)
+
+):
+
+    document = get_document_by_id(
+
+        session=session,
+
+        document_id=document_id,
+
+        email=current_user.email
+
+    )
+
+    if document is None:
+
+        raise HTTPException(
+
+            status_code=404,
+
+            detail="Document not found."
+
+        )
+
+    result = ProcessingService.process_document(
+
+        document.file_path
+
+    )
+
+    return {
+
+        "message": "Document processed successfully.",
+
+        "processing": result
 
     }
