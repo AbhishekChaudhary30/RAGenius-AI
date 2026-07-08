@@ -1,5 +1,4 @@
 import chromadb
-
 from chromadb.config import Settings
 
 
@@ -25,7 +24,7 @@ class ChromaService:
             )
 
         return cls._collection
-    
+
     @classmethod
     def store_chunks(
         cls,
@@ -59,7 +58,7 @@ class ChromaService:
             embeddings=embeddings,
             metadatas=metadatas
         )
-        
+
     @classmethod
     def search(
         cls,

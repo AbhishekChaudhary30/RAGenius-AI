@@ -19,6 +19,8 @@ from fastapi import Depends
 
 from app.core.security import get_current_user
 
+from app.api.search import router as search_router
+
 from app.core.security import (
     get_current_active_user,
     get_admin_user
@@ -96,6 +98,11 @@ app.include_router(
 app.include_router(
     embedding_router,
     prefix=settings.API_PREFIX
+)
+
+app.include_router(
+    search_router,
+    prefix="/api/v1"
 )
 
 @app.get("/me")

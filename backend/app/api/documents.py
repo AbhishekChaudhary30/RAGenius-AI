@@ -424,7 +424,7 @@ async def vector_search(
 
 ):
 
-    results = SearchService.semantic_search(
+    results = SearchService.search(
         query=query,
         top_k=top_k
     )
