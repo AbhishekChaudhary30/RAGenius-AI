@@ -14,6 +14,9 @@ from app.database.session import get_session
 
 from fastapi.responses import FileResponse
 
+from app.services.search_service import SearchService
+from fastapi import Query
+
 from app.services.document_service import (
     create_document,
     get_user_documents,
@@ -407,3 +410,23 @@ def process_document(
         "processing": result
 
     }
+    
+@router.get("/search/vector")
+async def vector_search(
+
+    query: str = Query(...),
+
+    top_k: int = Query(
+        default=5,
+        ge=1,
+        le=20
+    )
+
+):
+
+    results = SearchService.semantic_search(
+        query=query,
+        top_k=top_k
+    )
+
+    return results

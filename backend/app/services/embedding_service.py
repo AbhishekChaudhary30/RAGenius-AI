@@ -58,9 +58,8 @@ class EmbeddingService:
         embeddings = cls.embed_batch(texts)
 
         for chunk, embedding in zip(chunks, embeddings):
-
-            chunk.metadata["embedding_dimension"] = len(
-                embedding
-            )
-            
+            chunk.embedding = embedding
+            chunk.metadata["embedding_dimension"] = len(embedding)
             chunk.metadata["embedding_model"] = "all-MiniLM-L6-v2"
+        
+        return chunks

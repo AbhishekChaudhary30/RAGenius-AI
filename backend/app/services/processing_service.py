@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from app.vectordb.chroma_service import ChromaService
+
 from app.parsers.exceptions import (
     EmptyDocumentError,
     CorruptedDocumentError
@@ -56,6 +58,11 @@ class ProcessingService:
         
         embedded_chunks = EmbeddingService.embed_chunks(
             chunk_result["chunks"]
+        )
+        
+        ChromaService.store_chunks(
+            filename=path.name,
+            chunks=embedded_chunks
         )
 
         return {
