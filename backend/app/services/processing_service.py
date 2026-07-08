@@ -6,6 +6,7 @@ from app.parsers.exceptions import (
 )
 
 from app.parsers.parser_factory import ParserFactory
+from app.services.chunking_service import ChunkingService
 
 
 class ProcessingService:
@@ -39,6 +40,18 @@ class ProcessingService:
                 "Document contains no readable text."
             )
 
+        chunk_result = ChunkingService.create_chunks(
+
+            text=extracted_text,
+
+            strategy="recursive",
+
+            chunk_size=1000,
+
+            overlap=200
+
+        )
+
         return {
 
             "filename": path.name,
@@ -49,6 +62,12 @@ class ProcessingService:
 
             "characters": len(extracted_text),
 
-            "words": len(extracted_text.split())
+            "words": len(extracted_text.split()),
+
+            "total_chunks": chunk_result["total_chunks"],
+
+            "chunk_strategy": chunk_result["strategy"],
+
+            "chunks": chunk_result["chunks"]
 
         }
