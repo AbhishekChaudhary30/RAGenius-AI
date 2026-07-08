@@ -1,5 +1,9 @@
 from app.api.documents import router as document_router
 
+from app.api.embeddings import router as embedding_router
+
+from app.services.embedding_service import EmbeddingService
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -29,6 +33,10 @@ async def lifespan(app: FastAPI):
     create_db()
 
     logger.info("Database Ready")
+    
+    EmbeddingService.get_model()
+    
+    logger.info("Embedding Model Loaded")
 
     yield
 
@@ -83,6 +91,11 @@ app.include_router(
 app.include_router(
     document_router,
     prefix = settings.API_PREFIX
+)
+
+app.include_router(
+    embedding_router,
+    prefix=settings.API_PREFIX
 )
 
 @app.get("/me")

@@ -8,6 +8,8 @@ from app.parsers.exceptions import (
 from app.parsers.parser_factory import ParserFactory
 from app.services.chunking_service import ChunkingService
 
+from app.services.embedding_service import EmbeddingService
+
 
 class ProcessingService:
 
@@ -51,6 +53,10 @@ class ProcessingService:
             overlap=200
 
         )
+        
+        embedded_chunks = EmbeddingService.embed_chunks(
+            chunk_result["chunks"]
+        )
 
         return {
 
@@ -68,6 +74,8 @@ class ProcessingService:
 
             "chunk_strategy": chunk_result["strategy"],
 
-            "chunks": chunk_result["chunks"]
+            "chunks": embedded_chunks
 
         }
+        
+        
