@@ -4,14 +4,26 @@ from app.services.context_service import ContextService
 from app.llm.prompt_builder import PromptBuilder
 from app.llm.provider_factory import ProviderFactory
 
+from app.memory.memory_service import MemoryService
+from app.memory.session_manager import SessionManager
+
+from app.services.memory_summary_service import (
+    MemorySummaryService
+)
+
 
 class RAGService:
 
     @staticmethod
     def ask(
         question: str,
-        top_k: int = 5
+        top_k: int = 5,
+        session_id: str | None = None
     ):
+
+        session_id = SessionManager.get_or_create(
+            session_id
+        )
 
         search_results = HybridSearchService.search(
             query=question,
@@ -22,11 +34,19 @@ class RAGService:
 
             return {
 
+                "session_id": session_id,
+
                 "question": question,
 
                 "answer": "I could not find the answer in the uploaded documents.",
 
-                "sources": []
+                "sources": [],
+
+                "total_sources": 0,
+
+                "history_messages": MemoryService.total_messages(
+                    session_id
+                )
 
             }
 
@@ -34,17 +54,75 @@ class RAGService:
             search_results
         )
 
-        prompt = PromptBuilder.build(
-            question=question,
-            context=context
+        history = MemoryService.build_history(
+            session_id
         )
 
         provider = ProviderFactory.get_provider()
 
+        if MemorySummaryService.should_summarize(
+            session_id
+        ):
+
+            summary_prompt = (
+
+                MemorySummaryService.build_summary_prompt(
+                    session_id
+                )
+
+            )
+
+            summary = provider.generate(
+                summary_prompt
+            )
+
+            MemorySummaryService.finalize_summary(
+                session_id,
+                summary
+            )
+
+            history = MemoryService.build_history(
+                session_id
+            )
+
+        prompt = PromptBuilder.build(
+
+            question=question,
+
+            context=context,
+
+            history=history
+
+        )
+
         answer = provider.generate(
             prompt
         )
-        
+
+        MemoryService.add_message(
+
+            session_id,
+
+            "User",
+
+            question
+
+        )
+
+        MemoryService.add_message(
+
+            session_id,
+
+            "Assistant",
+
+            answer
+
+        )
+
+        history_message_count = MemoryService.total_messages(
+            session_id
+        )
+
         sources = []
 
         for item in search_results:
@@ -62,9 +140,17 @@ class RAGService:
                 sources.append(source)
 
         return {
+
+            "session_id": session_id,
+
             "question": question,
-            "answer": answer.strip(),
+
+            "answer": answer,
+
             "sources": sources,
-            "total_sources": len(sources)
+
+            "total_sources": len(sources),
+
+            "history_messages": history_message_count
 
         }
