@@ -1,4 +1,4 @@
-import os
+from app.core.config import settings
 
 
 class ProviderFactory:
@@ -6,16 +6,40 @@ class ProviderFactory:
     @staticmethod
     def get_provider():
 
-        provider = os.getenv("LLM_PROVIDER", "ollama").lower()
+        provider = settings.LLM_PROVIDER.lower()
 
         if provider == "ollama":
-            from app.llm.providers.ollama_provider import OllamaProvider
+
+            from app.llm.providers.ollama_provider import (
+                OllamaProvider
+            )
 
             return OllamaProvider()
 
-        if provider == "openai":
-            from app.llm.providers.openai_provider import OpenAIProvider
+        elif provider == "openai":
 
-            return OpenAIProvider(api_key=os.getenv("OPENAI_API_KEY"))
+            from app.llm.providers.openai_provider import (
+                OpenAIProvider
+            )
 
-        raise ValueError(f"Unsupported provider: {provider}")
+            return OpenAIProvider()
+
+        elif provider == "groq":
+
+            from app.llm.providers.groq_provider import (
+                GroqProvider
+            )
+
+            return GroqProvider()
+
+        elif provider == "gemini":
+
+            from app.llm.providers.gemini_provider import (
+                GeminiProvider
+            )
+
+            return GeminiProvider()
+
+        raise ValueError(
+            f"Unsupported provider: {provider}"
+        )

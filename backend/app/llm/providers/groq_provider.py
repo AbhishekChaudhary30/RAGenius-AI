@@ -1,16 +1,16 @@
-from openai import OpenAI
+from groq import Groq
 
 from app.core.config import settings
 
 from .base_provider import BaseProvider
 
 
-class OpenAIProvider(BaseProvider):
+class GroqProvider(BaseProvider):
 
     def __init__(self):
 
-        self.client = OpenAI(
-            api_key=settings.OPENAI_API_KEY
+        self.client = Groq(
+            api_key=settings.GROQ_API_KEY
         )
 
     def generate(
@@ -20,7 +20,7 @@ class OpenAIProvider(BaseProvider):
 
         response = self.client.chat.completions.create(
 
-            model=settings.OPENAI_MODEL,
+            model=settings.GROQ_MODEL,
 
             messages=[
                 {
