@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException
 
-from app.services.search_service import SearchService
+from app.services.hybrid_search_service import HybridSearchService
 
 router = APIRouter(
     prefix="/search",
@@ -11,7 +11,7 @@ router = APIRouter(
 
 
 @router.get("/")
-def semantic_search(
+def hybrid_search(
     query: str,
     top_k: int = 5,
     filename: Optional[str] = None
@@ -29,21 +29,26 @@ def semantic_search(
             detail="top_k must be between 1 and 20."
         )
 
-    results = SearchService.search(
+    results = HybridSearchService.search(
         query=query,
         top_k=top_k
     )
 
     if filename:
         results = [
-            result
-            for result in results
-            if result["filename"] == filename
+            item
+            for item in results
+            if item["filename"] == filename
         ]
 
     return {
+
         "query": query,
-        "top_k": top_k,
+
+        "search_type": "Hybrid Search",
+
         "total_results": len(results),
+
         "results": results
+
     }
