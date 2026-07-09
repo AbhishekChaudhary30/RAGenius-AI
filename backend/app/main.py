@@ -21,6 +21,8 @@ from app.core.security import get_current_user
 
 from app.api.search import router as search_router
 
+from app.api import chat
+
 from app.core.security import (
     get_current_active_user,
     get_admin_user
@@ -103,6 +105,10 @@ app.include_router(
 app.include_router(
     search_router,
     prefix="/api/v1"
+)
+
+app.include_router(
+    chat.router
 )
 
 @app.get("/me")
