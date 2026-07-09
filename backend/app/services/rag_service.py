@@ -1,9 +1,7 @@
 from app.services.hybrid_search_service import HybridSearchService
-
 from app.services.context_service import ContextService
 
 from app.llm.prompt_builder import PromptBuilder
-
 from app.llm.provider_factory import ProviderFactory
 
 
@@ -19,6 +17,18 @@ class RAGService:
             query=question,
             top_k=top_k
         )
+
+        if len(search_results) == 0:
+
+            return {
+
+                "question": question,
+
+                "answer": "I could not find the answer in the uploaded documents.",
+
+                "sources": []
+
+            }
 
         context = ContextService.build_context(
             search_results
@@ -41,6 +51,8 @@ class RAGService:
 
             "answer": answer,
 
-            "sources": search_results
+            "sources": search_results,
+
+            "total_sources": len(search_results)
 
         }

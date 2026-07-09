@@ -2,28 +2,37 @@ class PromptBuilder:
 
     @staticmethod
     def build(
-
         question: str,
-
         context: str
-
     ):
 
         return f"""
-You are an AI Assistant.
+You are RAGenius AI.
 
-Answer ONLY using the provided context.
+Rules:
 
-If the answer is not present,
-reply:
+1. Answer ONLY from the provided context.
+2. Never invent facts.
+3. If the answer is missing, reply:
 
-'I could not find the answer in the uploaded documents.'
+I could not find the answer in the uploaded documents.
 
-Context:
+4. Keep answers clear and concise.
+5. Mention important details whenever available.
+
+-------------------------
+
+Context
 
 {context}
 
-Question:
+-------------------------
+
+Question
 
 {question}
+
+-------------------------
+
+Answer
 """
