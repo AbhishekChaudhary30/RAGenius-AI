@@ -34,3 +34,33 @@ class GroqProvider(BaseProvider):
         )
 
         return response.choices[0].message.content
+
+    def generate_stream(
+        self,
+        prompt: str
+    ):
+
+        stream = self.client.chat.completions.create(
+
+            model=settings.GROQ_MODEL,
+
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+
+            temperature=0,
+
+            stream=True
+
+        )
+
+        for chunk in stream:
+
+            if (
+                chunk.choices
+                and chunk.choices[0].delta.content
+            ):
+                yield chunk.choices[0].delta.content

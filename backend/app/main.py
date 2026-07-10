@@ -23,6 +23,8 @@ from app.api.search import router as search_router
 
 from app.api import chat
 
+from app.api.chat import router as chat_router
+
 from app.core.security import (
     get_current_active_user,
     get_admin_user

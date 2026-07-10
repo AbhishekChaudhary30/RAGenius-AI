@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 
 from .base_provider import BaseProvider
@@ -11,36 +12,70 @@ class OllamaProvider(BaseProvider):
         prompt: str
     ):
 
-        url = "http://127.0.0.1:11434/api/generate"
-
-        payload = {
-            "model": os.getenv(
-                "OLLAMA_MODEL",
-                "llama3.2"
-            ),
-            "prompt": prompt,
-            "stream": False
-        }
-
-        print("=" * 80)
-        print("OLLAMA REQUEST")
-        print("URL:", url)
-        print("MODEL:", payload["model"])
-        print("PROMPT LENGTH:", len(prompt))
-        print("=" * 80)
-
         response = requests.post(
-            url,
-            json=payload,
-            timeout=(10, 300)
-        )
 
-        print("STATUS:", response.status_code)
+            "http://localhost:11434/api/generate",
+
+            json={
+
+                "model": os.getenv(
+                    "OLLAMA_MODEL",
+                    "llama3.2"
+                ),
+
+                "prompt": prompt,
+
+                "stream": False
+
+            },
+
+            timeout=120
+
+        )
 
         response.raise_for_status()
 
-        data = response.json()
+        return response.json()["response"]
 
-        print("RESPONSE RECEIVED")
+    def generate_stream(
+        self,
+        prompt: str
+    ):
 
-        return data["response"]
+        response = requests.post(
+
+            "http://localhost:11434/api/generate",
+
+            json={
+
+                "model": os.getenv(
+                    "OLLAMA_MODEL",
+                    "llama3.2"
+                ),
+
+                "prompt": prompt,
+
+                "stream": True
+
+            },
+
+            stream=True,
+
+            timeout=120
+
+        )
+
+        response.raise_for_status()
+
+        for line in response.iter_lines():
+
+            if not line:
+                continue
+
+            data = json.loads(
+                line.decode("utf-8")
+            )
+
+            if "response" in data:
+
+                yield data["response"]

@@ -32,5 +32,33 @@ class OpenAIProvider(BaseProvider):
             temperature=0
 
         )
+        
+        def generate_stream(
+            self,
+            prompt: str
+        ):
+
+            stream = self.client.chat.completions.create(
+
+                model="gpt-4.1-mini",
+
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+
+                stream=True
+
+            )
+
+            for chunk in stream:
+
+                delta = chunk.choices[0].delta.content
+
+                if delta:
+
+                    yield delta
 
         return response.choices[0].message.content
