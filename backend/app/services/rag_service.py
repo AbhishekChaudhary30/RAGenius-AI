@@ -11,6 +11,9 @@ from app.services.memory_summary_service import (
     MemorySummaryService
 )
 
+from app.monitoring.metrics_service import (
+    MetricsService
+)
 
 class RAGService:
 
@@ -24,10 +27,18 @@ class RAGService:
         session_id = SessionManager.get_or_create(
             session_id
         )
+        
+        total_start = MetricsService.now()
+        
+        retrieval_start = MetricsService.now()
 
         search_results = HybridSearchService.search(
             query=question,
             top_k=top_k
+        )
+        
+        retrieval_time = MetricsService.elapsed(
+            retrieval_start
         )
 
         if len(search_results) == 0:
@@ -94,9 +105,15 @@ class RAGService:
             history=history
 
         )
+        
+        generation_start = MetricsService.now()
 
         answer = provider.generate(
             prompt
+        )
+        
+        generation_time = MetricsService.elapsed(
+            generation_start
         )
 
         MemoryService.add_message(
@@ -130,22 +147,35 @@ class RAGService:
         history_message_count = MemoryService.total_messages(
             session_id
         )
-
+        
+        total_time = MetricsService.elapsed(
+            total_start
+        )
+        
         sources = []
-
+        
         for item in search_results:
-
             source = {
-
-                "filename": item["filename"],
-
-                "chunk_index": item["chunk_index"]
-
+                "filename":item["filename"],
+                "chunk_index":item["chunk_index"]
             }
-
+            
             if source not in sources:
-
                 sources.append(source)
+                
+        metrics = MetricsService.build_metrics(
+            retrieval_time=retrieval_time,
+            generation_time=generation_time,
+            total_time=total_time,
+            context_length=len(context),
+            history_length=len(history),
+            total_sources=len(sources),
+            provider=type(provider).__name__
+        )
+        
+        MetricsService.record(
+            metrics
+        )
 
         return {
 
@@ -159,7 +189,9 @@ class RAGService:
 
             "total_sources": len(sources),
 
-            "history_messages": history_message_count
+            "history_messages": history_message_count,
+            
+            "metrics": metrics
 
         }
         
@@ -279,15 +311,23 @@ class RAGService:
         session_id = SessionManager.get_or_create(
             session_id
         )
+        
+        total_start = MetricsService.now()
 
         yield {
             "event": "session",
             "data": session_id
         }
+        
+        retrieval_start = MetricsService.now()
 
         search_results = HybridSearchService.search(
             query=question,
             top_k=top_k
+        )
+        
+        retrieval_time = MetricsService.elapsed(
+            retrieval_start
         )
 
         if len(search_results) == 0:
@@ -354,6 +394,8 @@ class RAGService:
         )
 
         answer = ""
+        
+        generation_start = MetricsService.now()
 
         for token in provider.generate_stream(
             prompt
@@ -370,6 +412,28 @@ class RAGService:
             session_id,
             "Assistant",
             answer
+        )
+        
+        generation_time = MetricsService.elapsed(
+            generation_start
+        )
+        
+        total_time = MetricsService.elapsed(
+            total_start
+        )
+        
+        metrics = MetricsService.build_metrics(
+            retrieval_time=retrieval_time,
+            generation_time=generation_time,
+            total_time=total_time,
+            context_length=len(context),
+            history_length=len(history),
+            total_sources=len(search_results),
+            provider=type(provider).__name__
+        )
+        
+        MetricsService.record(
+            metrics
         )
         
         SessionManager.increment_messages(
@@ -395,6 +459,11 @@ class RAGService:
         yield {
             "event": "sources",
             "data": sources
+        }
+        
+        yield{
+            "event":"metrics",
+            "data":metrics
         }
 
         yield {

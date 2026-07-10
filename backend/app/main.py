@@ -32,6 +32,10 @@ from app.core.security import (
     get_admin_user
 )
 
+from app.api.metrics import (
+    router as metrics_router
+)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -117,6 +121,10 @@ app.include_router(
 
 app.include_router(
     sessions_router
+)
+
+app.include_router(
+    metrics_router
 )
 
 @app.get("/me")

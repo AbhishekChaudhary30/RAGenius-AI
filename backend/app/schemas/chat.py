@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+from typing import Any
 
 class ChatRequest(BaseModel):
 
@@ -26,6 +27,16 @@ class SourceResponse(BaseModel):
     filename: str
 
     chunk_index: int
+    
+
+class MetricsResponse(BaseModel):
+    retrieval_time_sec: float
+    generation_time_sec: float
+    total_time_sec: float
+    context_length: int
+    history_length: int
+    total_sources: int
+    provider: str
 
 
 class ChatResponse(BaseModel):
@@ -36,6 +47,10 @@ class ChatResponse(BaseModel):
 
     answer: str
 
-    sources: list[SourceResponse]
+    sources: list[dict[str, Any]]
 
     total_sources: int
+    
+    history_messages: int
+    
+    metrics: MetricsResponse
