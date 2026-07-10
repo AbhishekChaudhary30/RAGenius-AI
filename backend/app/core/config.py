@@ -39,12 +39,14 @@ class Settings(BaseSettings):
     GROQ_MODEL: str = "llama-3.3-70b-versatile"
     GEMINI_MODEL: str = "gemini-2.5-flash"
     OLLAMA_MODEL: str = "llama3.2"
+    
+    PROMPT_MODE: str = "strict"
+    PROMPT_VERSION: str = "2.0"
 
     model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=True,
         extra="ignore"
     )
-
 
 settings = Settings()
