@@ -25,6 +25,8 @@ from app.api import chat
 
 from app.api.chat import router as chat_router
 
+from app.api.sessions import router as sessions_router
+
 from app.core.security import (
     get_current_active_user,
     get_admin_user
@@ -111,6 +113,10 @@ app.include_router(
 
 app.include_router(
     chat.router
+)
+
+app.include_router(
+    sessions_router
 )
 
 @app.get("/me")

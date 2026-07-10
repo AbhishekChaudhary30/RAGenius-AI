@@ -108,6 +108,10 @@ class RAGService:
             question
 
         )
+        
+        SessionManager.increment_messages(
+            session_id
+        )
 
         MemoryService.add_message(
 
@@ -117,6 +121,10 @@ class RAGService:
 
             answer
 
+        )
+        
+        SessionManager.increment_messages(
+            session_id
         )
 
         history_message_count = MemoryService.total_messages(
@@ -232,6 +240,10 @@ class RAGService:
             question
 
         )
+        
+        SessionManager.increment_messages(
+            session_id
+        )
 
         complete_answer = ""
 
@@ -251,6 +263,10 @@ class RAGService:
 
             complete_answer
 
+        )
+        
+        SessionManager.increment_messages(
+            session_id
         )
         
     @staticmethod
@@ -332,6 +348,10 @@ class RAGService:
             "User",
             question
         )
+        
+        SessionManager.increment_messages(
+            session_id
+        )
 
         answer = ""
 
@@ -350,6 +370,10 @@ class RAGService:
             session_id,
             "Assistant",
             answer
+        )
+        
+        SessionManager.increment_messages(
+            session_id
         )
 
         sources = []

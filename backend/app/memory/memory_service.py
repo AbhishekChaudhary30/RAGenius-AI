@@ -194,3 +194,36 @@ class MemoryService:
             None
 
         )
+        
+    @classmethod
+    def get_session_data(
+
+        cls,
+
+        session_id: str
+
+    ):
+
+        cls._create(session_id)
+
+        return cls._memory[session_id]
+
+    @classmethod
+    def session_exists(
+
+        cls,
+
+        session_id: str
+
+    ):
+
+        return session_id in cls._memory
+    
+    @classmethod
+    def clear_all(
+
+        cls
+
+    ):
+
+        cls._memory.clear()
