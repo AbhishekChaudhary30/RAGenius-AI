@@ -32,8 +32,20 @@ from app.api.metrics import (
     router as metrics_router
 )
 
+from app.monitoring.health import (
+    router as health_router
+)
+
 from app.cache.redis_client import (
     RedisClient
+)
+
+from app.monitoring.request_logger import (
+    RequestLoggingMiddleware
+)
+
+from app.monitoring.error_handler import (
+    global_exception_handler
 )
 
 @asynccontextmanager
@@ -86,6 +98,15 @@ app.add_middleware(
 
 )
 
+app.add_middleware(
+    RequestLoggingMiddleware
+)
+
+app.add_exception_handler(
+    Exception,
+    global_exception_handler
+)
+
 
 @app.get("/")
 def home():
@@ -130,6 +151,10 @@ app.include_router(
 
 app.include_router(
     metrics_router
+)
+
+app.include_router(
+    health_router
 )
 
 @app.get("/me")
