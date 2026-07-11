@@ -7,6 +7,11 @@ from app.llm.provider_factory import ProviderFactory
 from app.memory.memory_service import MemoryService
 from app.memory.session_manager import SessionManager
 
+from app.cache.redis_client import RedisClient
+from app.cache.cache_keys import CacheKeys
+
+from app.core.logging import logger
+
 from app.services.memory_summary_service import (
     MemorySummaryService
 )
@@ -28,9 +33,46 @@ class RAGService:
             session_id
         )
         
+        cache_key = CacheKeys.query_key(
+            question=question,
+            top_k=top_k
+        )
+
+        cached_response = RedisClient.get_json(
+            cache_key
+        )
+
+        if cached_response is not None:
+
+            logger.info(
+                "✅ Query Cache Hit"
+            )
+
+            cached_response["cached"] = True
+            
+            cached_response["session_id"] = session_id
+            
+            if "metrics" not in cached_response:
+                cached_response["metrics"] = {
+                    "retrieval_time_sec":0.0,
+                    "generation_time_sec":0.0,
+                    "total_time_sec":0.0,
+                    "context_length":0,
+                    "history_length":0,
+                    "total_sources":
+                        cached_response.get("total_sources",0),
+                    "provider":"cache"
+                }
+
+            return cached_response
+        
         total_start = MetricsService.now()
         
         retrieval_start = MetricsService.now()
+        
+        logger.info(
+            "❌ Query Cache Miss"
+        )
 
         search_results = HybridSearchService.search(
             query=question,
@@ -43,7 +85,7 @@ class RAGService:
 
         if len(search_results) == 0:
 
-            return {
+            response = {
 
                 "session_id": session_id,
 
@@ -57,9 +99,28 @@ class RAGService:
 
                 "history_messages": MemoryService.total_messages(
                     session_id
-                )
+                ),
 
+                "metrics": {
+                    "retrieval_time_sec": retrieval_time,
+                    "generation_time_sec": 0.0,
+                    "total_time_sec": MetricsService.elapsed(total_start),
+                    "context_length": 0,
+                    "history_length": 0,
+                    "total_sources": 0,
+                    "provider": "none"
+                },
+
+                "cached": False
             }
+
+            RedisClient.set_json(
+                key=cache_key,
+                value=response,
+                ttl=300
+            )
+
+            return response
 
         context = ContextService.build_context(
             search_results
@@ -177,23 +238,25 @@ class RAGService:
             metrics
         )
 
-        return {
-
-            "session_id": session_id,
-
-            "question": question,
-
-            "answer": answer,
-
-            "sources": sources,
-
-            "total_sources": len(sources),
-
-            "history_messages": history_message_count,
+        response = {
+                "session_id":session_id,
+                "question":question,
+                "answer":answer,
+                "sources":sources,
+                "total_sources":len(sources),
+                "history_messages":history_message_count,
+                "metrics": metrics,
+                "cached":False,
+                "provider":type(provider).__name__
+            }
             
-            "metrics": metrics
-
-        }
+        RedisClient.set_json(
+            key=cache_key,
+            value=response,
+            ttl=300
+        )
+            
+        return response
         
     @staticmethod
     def stream(

@@ -27,6 +27,8 @@ from app.api.chat import router as chat_router
 
 from app.api.sessions import router as sessions_router
 
+from app.cache.redis_client import RedisClient
+
 from app.core.security import (
     get_current_active_user,
     get_admin_user
@@ -36,6 +38,9 @@ from app.api.metrics import (
     router as metrics_router
 )
 
+from app.cache.redis_client import (
+    RedisClient
+)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -45,12 +50,18 @@ async def lifespan(app: FastAPI):
     create_db()
 
     logger.info("Database Ready")
-    
+
     EmbeddingService.get_model()
-    
+
     logger.info("Embedding Model Loaded")
 
+    RedisClient.connect()
+
+    logger.info("Redis Ready")
+
     yield
+
+    RedisClient.disconnect()
 
     logger.info("Stopping RAGenius AI")
 
@@ -160,5 +171,37 @@ def admin_dashboard(
         "message": "Welcome Admin",
 
         "user": current_user.full_name
+
+    }
+    
+@app.get("/redis/test")
+def redis_test():
+
+    RedisClient.set_json(
+
+        "demo",
+
+        {
+            "message": "Redis Working",
+            "status": True
+        },
+
+        ttl=300
+
+    )
+
+    value = RedisClient.get_json(
+
+        "demo"
+
+    )
+
+    return {
+
+        "success": True,
+
+        "redis_connected": RedisClient.is_connected(),
+
+        "data": value
 
     }

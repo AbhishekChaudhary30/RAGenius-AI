@@ -1,5 +1,7 @@
 from sentence_transformers import SentenceTransformer
 
+from app.cache.redis_client import RedisClient
+from app.cache.cache_keys import CacheKeys
 
 class EmbeddingService:
 
@@ -17,14 +19,45 @@ class EmbeddingService:
         return cls._model
       
     @classmethod
-    def embed_text(cls, text: str):
+    def embed_text(
+        cls,
+        text: str
+    ):
+
+        cache_key = CacheKeys.embedding_key(
+            text
+        )
+
+        cached_embedding = RedisClient.get_json(
+            cache_key
+        )
+
+        if cached_embedding is not None:
+            
+            print("✅ Embedding Cache Hit")
+
+            return cached_embedding
+        
+        print("❌ Embedding Cache Miss")
 
         model = cls.get_model()
 
-        return model.encode(
+        embedding = model.encode(
             text,
             convert_to_tensor=False
         ).tolist()
+
+        RedisClient.set_json(
+
+            key=cache_key,
+
+            value=embedding,
+
+            ttl=3600
+
+        )
+
+        return embedding
 
 
     @classmethod
