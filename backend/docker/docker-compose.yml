@@ -1,0 +1,56 @@
+services:
+
+  ragenius-api:
+
+    build:
+      context: ..
+      dockerfile: Dockerfile
+
+    container_name: ragenius-api
+
+    restart: unless-stopped
+
+    ports:
+      - "8000:8000"
+
+    env_file:
+      - ../.env
+
+    volumes:
+      - ../app/uploads:/app/app/uploads
+      - ../chroma_db:/app/chroma_db
+
+    depends_on:
+      redis:
+        condition: service_started
+
+    networks:
+      - ragenius-network
+
+  redis:
+
+    image: redis:7-alpine
+
+    container_name: ragenius-redis
+
+    restart: unless-stopped
+
+    ports:
+      - "6379:6379"
+
+    command: redis-server --appendonly yes
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - ragenius-network
+
+volumes:
+
+  redis-data:
+
+networks:
+
+  ragenius-network:
+    driver: bridge
