@@ -17,17 +17,11 @@ from app.api.auth import router as auth_router
 
 from fastapi import Depends
 
-from app.core.security import get_current_user
-
 from app.api.search import router as search_router
-
-from app.api import chat
 
 from app.api.chat import router as chat_router
 
 from app.api.sessions import router as sessions_router
-
-from app.cache.redis_client import RedisClient
 
 from app.core.security import (
     get_current_active_user,
@@ -127,7 +121,7 @@ app.include_router(
 )
 
 app.include_router(
-    chat.router
+    chat_router
 )
 
 app.include_router(

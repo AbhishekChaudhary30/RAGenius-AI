@@ -50,7 +50,7 @@ def chat(
     ):
         
         raise HTTPException(
-            status_code=4000,
+            status_code=400,
             detail = "Unsafe prompt detected."
         )
 
@@ -79,7 +79,7 @@ def stream_chat(
     ):
         raise HTTPException(
             status_code=429,
-            detail = "Rate limit excedded. Please try again later."
+            detail = "Rate limit exceeded. Please try again later."
         )
         
     question = InputValidator.validate_question(
