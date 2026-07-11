@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, HTTPException
 
 from app.utils.sse import format_sse
 
@@ -10,6 +10,10 @@ from app.schemas.chat import (
 )
 
 from app.services.rag_service import RAGService
+from app.security.rate_limiter import RateLimiter
+
+from app.security.input_validator import InputValidator
+from app.security.prompt_guard import PromptGuard
 
 
 router = APIRouter(
@@ -23,12 +27,36 @@ router = APIRouter(
     response_model=ChatResponse
 )
 def chat(
-    request: ChatRequest
+    request: ChatRequest,
+    http_request: Request
 ):
+    
+    client_ip = http_request.client.host
+    
+    if not RateLimiter.allow_request(
+        client_ip
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail = "Rate limit exceeded. Please try again later."
+        )
+        
+    question = InputValidator.validate_question(
+        request.question
+    )
+    
+    if not PromptGuard.is_safe(
+        question
+    ):
+        
+        raise HTTPException(
+            status_code=4000,
+            detail = "Unsafe prompt detected."
+        )
 
     return RAGService.ask(
 
-        question=request.question,
+        question=question,
 
         top_k=request.top_k,
 
@@ -40,14 +68,37 @@ def chat(
     "/stream"
 )
 def stream_chat(
-    request: ChatRequest
+    request: ChatRequest,
+    http_request: Request
 ):
+    
+    client_ip = http_request.client.host
+    
+    if not RateLimiter.allow_request(
+        client_ip
+    ):
+        raise HTTPException(
+            status_code=429,
+            detail = "Rate limit excedded. Please try again later."
+        )
+        
+    question = InputValidator.validate_question(
+        request.question
+    )
+    
+    if not PromptGuard.is_safe(
+        question
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsafe prompt detected."
+        )
 
     def event_generator():
 
         for event in RAGService.stream_events(
 
-            question=request.question,
+            question=question,
 
             top_k=request.top_k,
 

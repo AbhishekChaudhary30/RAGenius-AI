@@ -17,6 +17,8 @@ from fastapi.responses import FileResponse
 from app.services.search_service import SearchService
 from fastapi import Query
 
+from app.security.file_validator import FileValidator
+
 from app.services.document_service import (
     create_document,
     get_user_documents,
@@ -67,6 +69,16 @@ async def upload_document(
             status_code=400,
             detail="Only PDF, DOCX and TXT files are allowed."
         )
+        
+    try:
+        safe_filename = FileValidator.validate(
+            file
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail = str(e)
+        )
 
     contents = await file.read()
 
@@ -77,14 +89,14 @@ async def upload_document(
             detail="Maximum file size is 10 MB."
         )
 
-    save_path = UPLOAD_DIR / file.filename
+    save_path = UPLOAD_DIR / safe_filename
 
     with open(save_path, "wb") as f:
         f.write(contents)
 
     document = create_document(
         session=session,
-        filename=file.filename,
+        filename=safe_filename,
         original_filename=file.filename,
         uploaded_by=current_user.email,
         file_path=str(save_path),
